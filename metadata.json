@@ -1,0 +1,6 @@
+{
+  "name": "Veridoxa AI",
+  "description": "Intelligent Identity & Document Authenticity Screening System for AI-assisted fraud detection and risk triage.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
