@@ -1,6 +1,6 @@
 {
   "name": "Veridoxa AI",
-  "description": "Intelligent Identity & Document Authenticity Screening System for AI-assisted fraud detection and risk triage.",
-  "requestFramePermissions": [],
+  "description": "AI-assisted border checkpoint identity, travel document, face match, liveness, and entry validation screening system.",
+  "requestFramePermissions": ["camera"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

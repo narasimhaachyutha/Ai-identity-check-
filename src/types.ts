@@ -7,7 +7,9 @@ export type RiskSignalKey =
   | 'field_format_consistency'
   | 'visual_anomalies'
   | 'cross_field_consistency'
-  | 'ai_confidence';
+  | 'ai_confidence'
+  | 'face_match'
+  | 'liveness';
 
 export interface RiskAssessmentSignal {
   key: RiskSignalKey;
@@ -55,6 +57,59 @@ export interface RiskAssessmentEngineResult {
   calculatedAt: string;
 }
 
+export type FaceMatchStatus = 'MATCH' | 'PARTIAL_REVIEW' | 'NO_MATCH' | 'NOT_PERFORMED';
+
+export interface FaceVerificationResult {
+  documentFaceDetected: boolean;
+  documentFaceThumbnail?: string;
+  documentFaceBoundingBox?: {
+    x: number; // percentage 0-100
+    y: number;
+    width: number;
+    height: number;
+  };
+  selfieFaceDetected: boolean;
+  selfieThumbnail?: string;
+  matchStatus: FaceMatchStatus;
+  matchScore: number; // 0 to 100 (deterministic comparison)
+  confidence: number; // 0 to 100
+  comparisonDetails: string[];
+  method: string;
+  timestamp: string;
+  disclaimerNotice: string;
+}
+
+export type LivenessStatus = 'PASS' | 'REVIEW' | 'FAIL' | 'NOT_PERFORMED';
+export type LivenessChallengeType = 'turn_left' | 'turn_right' | 'blink' | 'look_center';
+
+export interface LivenessVerificationResult {
+  status: LivenessStatus;
+  challenge: string;
+  challengeType: LivenessChallengeType;
+  faceDetected: boolean;
+  movementDetected: boolean;
+  movementScore: number; // 0 to 100
+  confidence: number; // 0 to 100
+  observations: string[];
+  sequenceCapturedCount: number;
+  antiSpoofPassed: boolean;
+  antiSpoofDetails?: string;
+  timestamp: string;
+  disclaimerNotice: string;
+}
+
+export interface VerificationSummary {
+  documentStatus: 'PASSED' | 'WARNING' | 'FAILED';
+  ocrStatus: 'PASSED' | 'WARNING' | 'FAILED';
+  documentFaceStatus: 'DETECTED' | 'NOT_DETECTED';
+  faceMatchStatus: FaceMatchStatus;
+  livenessStatus: LivenessStatus;
+  consistencyStatus: 'PASSED' | 'WARNING' | 'FAILED';
+  overallRiskLevel: 'LOW_RISK' | 'NEEDS_REVIEW' | 'HIGH_RISK';
+  recommendation: 'CLEAR FOR PROCEED' | 'REQUIRES MANUAL REVIEW' | 'REJECT / PHYSICAL INSPECTION';
+  explanation: string;
+}
+
 export type DocumentType = 
   | 'passport'
   | 'drivers_license'
@@ -97,6 +152,34 @@ export interface AIAnalysisLayerResult {
   confidence: number; // 0-100
   requiresManualReview: boolean;
   explanation: string;
+  fieldEvidence?: StructuredFieldEvidenceMap;
+}
+
+export type FieldConfidence = 'HIGH' | 'MEDIUM' | 'LOW';
+export type FieldExtractionStatus = 'EXTRACTED' | 'NEEDS_REVIEW' | 'NOT_DETECTED' | 'CONFLICT_DETECTED';
+
+export interface FieldEvidenceItem {
+  value: string | null;
+  sourceText: string | null;
+  confidence: FieldConfidence;
+  status: FieldExtractionStatus;
+  validationFlags?: string[];
+  validationMessage?: string;
+}
+
+export interface StructuredFieldEvidenceMap {
+  fullName?: FieldEvidenceItem;
+  documentNumber?: FieldEvidenceItem;
+  dateOfBirth?: FieldEvidenceItem;
+  expirationDate?: FieldEvidenceItem;
+  issueDate?: FieldEvidenceItem;
+  gender?: FieldEvidenceItem;
+  nationality?: FieldEvidenceItem;
+  issuingAuthority?: FieldEvidenceItem;
+  address?: FieldEvidenceItem;
+  mrzLine1?: FieldEvidenceItem;
+  mrzLine2?: FieldEvidenceItem;
+  [key: string]: FieldEvidenceItem | undefined;
 }
 
 export interface ForensicFinding {
@@ -125,6 +208,7 @@ export interface ExtractedOCRData {
   mrzChecksumValid?: boolean;
   personalNumber?: string;
   rawTextPreview?: string;
+  fieldEvidence?: StructuredFieldEvidenceMap;
 }
 
 export interface DocumentQualityMetrics {
@@ -183,6 +267,11 @@ export interface VerificationResult {
 
   // Dedicated AI Analysis Layer (Structured Output)
   aiAnalysis?: AIAnalysisLayerResult;
+
+  // Biometric & Liveness Verification Modules
+  faceVerification?: FaceVerificationResult;
+  livenessVerification?: LivenessVerificationResult;
+  verificationSummary?: VerificationSummary;
   
   // Recommendations
   manualReviewRecommended: boolean;

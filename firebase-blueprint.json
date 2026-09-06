@@ -1,0 +1,129 @@
+{
+  "entities": {
+    "VerificationRecord": {
+      "title": "VerificationRecord",
+      "description": "Border control document verification and screening record",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique verification record identifier",
+          "maxLength": 128
+        },
+        "inspectorId": {
+          "type": "string",
+          "description": "User ID of the officer or inspector who performed the verification",
+          "maxLength": 128
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "ISO timestamp of verification",
+          "maxLength": 64
+        },
+        "fileName": {
+          "type": "string",
+          "description": "Name of the uploaded document file",
+          "maxLength": 256
+        },
+        "documentType": {
+          "type": "string",
+          "description": "Type of document evaluated (passport, national_id, etc.)",
+          "maxLength": 64
+        },
+        "documentNumber": {
+          "type": "string",
+          "description": "Extracted document serial or passport number",
+          "maxLength": 64
+        },
+        "subjectName": {
+          "type": "string",
+          "description": "Extracted name of the document holder",
+          "maxLength": 128
+        },
+        "riskLevel": {
+          "type": "string",
+          "description": "Calculated risk assessment tier (LOW_RISK, NEEDS_REVIEW, HIGH_RISK)",
+          "maxLength": 32
+        },
+        "riskScore": {
+          "type": "number",
+          "description": "Calculated risk score from 0 to 100"
+        },
+        "auditHash": {
+          "type": "string",
+          "description": "Cryptographic or tamper-evident audit signature hash",
+          "maxLength": 128
+        },
+        "recordJson": {
+          "type": "string",
+          "description": "Serialized full verification result snapshot",
+          "maxLength": 900000
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Record creation timestamp",
+          "maxLength": 64
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Record last updated timestamp",
+          "maxLength": 64
+        }
+      },
+      "required": ["id", "inspectorId", "riskLevel", "createdAt"]
+    },
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Immigration officer or analyst account profile",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Firebase Auth UID of the user",
+          "maxLength": 128
+        },
+        "email": {
+          "type": "string",
+          "description": "Officer email address",
+          "maxLength": 128
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Officer display name or badge name",
+          "maxLength": 128
+        },
+        "role": {
+          "type": "string",
+          "description": "System role (officer, supervisor, admin)",
+          "maxLength": 32
+        },
+        "checkpointStation": {
+          "type": "string",
+          "description": "Assigned border checkpoint or terminal ID",
+          "maxLength": 128
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Account registration timestamp",
+          "maxLength": 64
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Account update timestamp",
+          "maxLength": 64
+        }
+      },
+      "required": ["id", "email", "role", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/verifications/{verificationId}": {
+      "schema": "VerificationRecord",
+      "description": "Collection of border verification and forensic screening records"
+    },
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "Collection of border checkpoint officer user accounts"
+    }
+  }
+}

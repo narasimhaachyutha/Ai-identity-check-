@@ -1,6 +1,12 @@
-import { VerificationResult } from '../types';
+import { VerificationResult, FaceVerificationResult } from '../types';
 import { SAMPLE_PRESET_DOCUMENTS } from '../data/sampleDocuments';
 import { calculateRiskAssessment } from '../lib/riskAssessmentEngine';
+import { compareFaces } from '../lib/faceVerificationEngine';
+import {
+  saveVerificationToFirestore,
+  fetchVerificationsFromFirestore,
+  auth,
+} from '../lib/firebase';
 
 export interface HealthStatus {
   status: string;
@@ -27,6 +33,18 @@ export async function checkServerHealth(): Promise<HealthStatus> {
 }
 
 export async function fetchVerificationHistory(): Promise<VerificationResult[]> {
+  // If authenticated with Firebase, fetch from Cloud Firestore first
+  if (auth.currentUser) {
+    try {
+      const firestoreRecords = await fetchVerificationsFromFirestore(auth.currentUser);
+      if (firestoreRecords && firestoreRecords.length > 0) {
+        return firestoreRecords;
+      }
+    } catch (err) {
+      console.warn('Could not fetch from Firestore, falling back to local server history:', err);
+    }
+  }
+
   try {
     const res = await fetch('/api/history');
     if (!res.ok) throw new Error('History fetch failed');
@@ -43,6 +61,16 @@ export async function fetchVerificationHistory(): Promise<VerificationResult[]> 
 }
 
 export async function saveVerificationRecord(record: VerificationResult): Promise<boolean> {
+  // If officer is signed into Firebase, save to Cloud Firestore
+  if (auth.currentUser) {
+    try {
+      await saveVerificationToFirestore(record, auth.currentUser);
+    } catch (err) {
+      console.warn('Failed to save to Firestore:', err);
+    }
+  }
+
+  // Also save to server memory store
   try {
     const res = await fetch('/api/history/add', {
       method: 'POST',
@@ -82,7 +110,6 @@ export async function analyzeDocumentAPI(payload: {
         id: `VDX-${new Date().getFullYear()}-${Math.floor(10000 + Math.random() * 90000)}`,
         timestamp: new Date().toISOString(),
       };
-      await saveVerificationRecord(freshResult);
       return freshResult;
     }
   }
@@ -190,3 +217,35 @@ export async function analyzeDocumentAPI(payload: {
     return fallbackResult;
   }
 }
+
+/**
+ * Biometric facial comparison API client.
+ * Calls /api/biometrics/compare on the server (Gemini AI Vision),
+ * falling back seamlessly to client-side multi-vector feature comparator if needed.
+ */
+export async function compareBiometricsAPI(payload: {
+  documentFaceUrl: string;
+  selfieUrl: string;
+  livenessData?: any;
+}): Promise<FaceVerificationResult> {
+  try {
+    const res = await fetch('/api/biometrics/compare', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      if (data.success && data.result) {
+        return data.result;
+      }
+    }
+  } catch (err) {
+    console.warn('[Biometrics] API endpoint call failed, falling back to local engine:', err);
+  }
+
+  // Client-side fallback to deterministic multi-vector feature comparator
+  return compareFaces(payload.documentFaceUrl, payload.selfieUrl);
+}
+

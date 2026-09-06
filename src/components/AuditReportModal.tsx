@@ -243,6 +243,81 @@ export const AuditReportModal: React.FC<AuditReportModalProps> = ({
             </div>
           </div>
 
+          {/* Biometric Face Match & Liveness Verification Section */}
+          {(result.faceVerification || result.livenessVerification) && (
+            <div className="p-4 rounded-xl bg-slate-950/80 border border-slate-800 space-y-3">
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs font-bold text-sky-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <Shield className="w-3.5 h-3.5" />
+                  Biometric Face Match & Anti-Spoof Liveness Verdict
+                </h4>
+                <span className="text-[11px] font-mono text-slate-400">
+                  Dual-Channel Analysis
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                {/* Face Match Mini Block */}
+                {result.faceVerification && (
+                  <div className="p-3 rounded-lg bg-slate-900/90 border border-slate-800 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-slate-200">Portrait Face Match</span>
+                      <span className="font-mono text-sky-400 font-bold">
+                        {result.faceVerification.matchScore}% ({result.faceVerification.matchStatus})
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      {result.faceVerification.documentFaceThumbnail && (
+                        <img
+                          src={result.faceVerification.documentFaceThumbnail}
+                          alt="Doc Face"
+                          className="w-12 h-14 rounded object-cover border border-slate-700 shrink-0"
+                        />
+                      )}
+                      {result.faceVerification.selfieThumbnail && (
+                        <img
+                          src={result.faceVerification.selfieThumbnail}
+                          alt="Selfie"
+                          className="w-12 h-14 rounded object-cover border border-slate-700 shrink-0"
+                        />
+                      )}
+                      <div className="text-[11px] text-slate-400 space-y-0.5">
+                        <p>{result.faceVerification.comparisonDetails[0] || 'Pixel & structure analyzed.'}</p>
+                        <p className="text-[10px] text-slate-500 font-mono">
+                          Doc Detected: {result.faceVerification.documentFaceDetected ? 'Yes' : 'No'} • Selfie: {result.faceVerification.selfieFaceDetected ? 'Yes' : 'No'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Liveness Mini Block */}
+                {result.livenessVerification && (
+                  <div className="p-3 rounded-lg bg-slate-900/90 border border-slate-800 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-slate-200">Liveness & Anti-Spoof</span>
+                      <span className={`font-mono font-bold ${result.livenessVerification.status === 'PASS' ? 'text-emerald-400' : 'text-amber-400'}`}>
+                        {result.livenessVerification.status} ({result.livenessVerification.movementScore}/100)
+                      </span>
+                    </div>
+                    <div className="text-[11px] text-slate-400 space-y-1">
+                      <p>
+                        <strong className="text-slate-300">Challenge:</strong> {result.livenessVerification.challenge}
+                      </p>
+                      <p>
+                        <strong className="text-slate-300">Anti-Spoof:</strong>{' '}
+                        {result.livenessVerification.antiSpoofPassed ? 'Passed (Live Motion Verified)' : 'Flagged (Uncertain)'}
+                      </p>
+                      <p className="text-[10px] text-slate-500 font-mono">
+                        {result.livenessVerification.sequenceCapturedCount} frames analyzed in sequence
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Forensic Findings Table */}
           <div className="space-y-2">
             <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">

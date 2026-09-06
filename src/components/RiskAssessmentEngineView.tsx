@@ -20,6 +20,8 @@ import {
   Info,
   ChevronDown,
   ChevronUp,
+  ScanFace,
+  Activity,
 } from 'lucide-react';
 import {
   RiskAssessmentEngineResult,
@@ -45,6 +47,8 @@ const SIGNAL_ICONS: Record<RiskSignalKey, React.ComponentType<{ className?: stri
   visual_anomalies: Eye,
   cross_field_consistency: Scale,
   ai_confidence: Sparkles,
+  face_match: ScanFace,
+  liveness: Activity,
 };
 
 export const RiskAssessmentEngineView: React.FC<RiskAssessmentEngineViewProps> = ({
